@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../statics/css/bootstrap.min.css">
+<link rel="stylesheet" href="../statics/css/highlightjs-copy.min.css">
+<link rel="stylesheet" href="../statics/css/solarized-dark.css">
+<script src="../statics/js/highlight.min.js"></script>
+<script src="../statics/js/highlightjs-copy.min.js"></script>
+<body>
+<div class="bd-content">
+    <div class="row ml-2"><h2 class="d-flex">Code</h2><h5 class="d-flex mt-2">&#160;&#160;(NO:&#160;{{.no}})</h5></div>
+    <pre class="ml-2 mr-2"><code class='language-go'>{{.code}}</code></pre>
+</div>
+<div class="bd-content m-2"><h2>Tests({{.id}})</h2>
+    <pre><code class='language-go'>{{.tests}}</code></pre>
+</div>
+<div class="bd-content m-2"><h2>Question</h2>
+    <pre><code class="language-rust">{{.content}}</code></pre>
+</div>
+</body>
+<script type="text/javascript">
+    hljs.highlightAll();
+    hljs.addPlugin(new CopyButtonPlugin());
+</script>
+</html>
