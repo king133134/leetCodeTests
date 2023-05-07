@@ -19,7 +19,7 @@ func str2code(p *param, val string) *Code {
 	}
 	res := &Code{}
 	switch {
-	case p.val == "[]byte":
+	case p.val == "[]byte" || p.val == "[][]byte":
 		res.Append([]byte(p.val)...)
 		for i < n {
 			b := val[i]
@@ -35,8 +35,7 @@ func str2code(p *param, val string) *Code {
 			res.Append(b)
 			i++
 		}
-
-	case p.val == "[][]int" || p.val == "[]int" || p.val == "[]string" || p.val == "[]bool":
+	case p.val == "[][]int" || p.val == "[]int" || p.val == "[]string" || p.val == "[][]string" || p.val == "[]bool":
 		res.AppendBytes([]byte(p.val))
 		for i < n {
 			b := val[i]
@@ -55,9 +54,41 @@ func str2code(p *param, val string) *Code {
 		res.AppendBytes(toTreeNode(val[i:]))
 	case p.val == "*ListNode":
 		res.AppendBytes(toListNode(val[i:]))
+	case p.val == "[]*ListNode":
+		res.AppendBytes(toListNodeSlice(val[i:]))
+	case p.val == "[]*TreeNode":
+		res.AppendBytes(toTreeNodeSlice(val[i:]))
 	default:
 		panic("str2code func type:" + p.val + " is not match!")
 	}
+	return res
+}
+
+// eg:[[1,4,5],[1,3,4],[2,6]]
+func toListNodeSlice(str string) []byte {
+	res := []byte("[]*ListNode{")
+	i, j, n := 0, 0, len(str)
+	for str[i] != '[' {
+		i++
+	}
+	i++
+	for i < n {
+		for i < n && str[i] != '[' {
+			i++
+		}
+		j = i
+		for j < n && str[j] != ']' {
+			j++
+		}
+		if j-i < 2 {
+			res = append(res, ',')
+			break
+		}
+		res = append(res, toListNode(str[i:j+1])...)
+		res = append(res, ',')
+		i = j + 1
+	}
+	res[len(res)-1] = '}'
 	return res
 }
 
@@ -76,8 +107,13 @@ func toListNode(str string) []byte {
 		}
 	}
 
-	items = append(items, str[pre:i])
+	if pre < i {
+		items = append(items, str[pre:i])
+	}
 	n := len(items)
+	if n == 0 {
+		return []byte("nil")
+	}
 
 	null := []byte("nil")
 	head := []byte("&ListNode{")
@@ -101,23 +137,36 @@ func toListNode(str string) []byte {
 	return dfs(0)
 }
 
-// 把测试用例的数据转成TreeNode的代码
-func toTreeNode(str string) []byte {
-	i := 0
+func toTreeNodeSlice(str string) []byte {
+	res := []byte("[]*TreeNode{")
+	i, j, n := 0, 0, len(str)
 	for str[i] != '[' {
 		i++
 	}
-
-	var items []string
-	pre := i + 1
-	for i++; str[i] != ']'; i++ {
-		if str[i] == ',' {
-			items = append(items, str[pre:i])
-			pre = i + 1
+	i++
+	for i < n {
+		for i < n && str[i] != '[' {
+			i++
 		}
+		j = i
+		for j < n && str[j] != ']' {
+			j++
+		}
+		if j-i < 2 {
+			res = append(res, ',')
+			break
+		}
+		res = append(res, toTreeNode(str[i:j+1])...)
+		res = append(res, ',')
+		i = j + 1
 	}
+	res[len(res)-1] = '}'
+	return res
+}
 
-	items = append(items, str[pre:i])
+// 把测试用例的数据转成TreeNode的代码(eg:[1,2,3])
+func toTreeNode(str string) []byte {
+	items := strings.Split(strings.Trim(str, "[] "), ",")
 	null := []byte("nil")
 	head := []byte("&TreeNode{")
 	tail := []byte("}")
@@ -170,22 +219,43 @@ func CreateTests(code string, con *string) *Tests {
 
 func createTests(params []*param, fName string, tests []testIO) *Tests {
 	res := make([]*Test, len(tests))
+	pn := 0
+	for _, v := range params {
+		if v.key != "output" {
+			pn++
+		}
+	}
 	for i, io := range tests {
 		t := &Test{}
 		j, item := 0, ""
-		for j, item = range strings.Split(io.input, ", ") {
+		start := 0
+		for k := 0; k < pn; k++ {
+			item, j = indexParam(io.input[start:], params[k+1].key)
+			start += j
 			idx := strings.IndexByte(item, '=')
-			*t = append(*t, str2code(params[j], item[idx+1:]))
+			*t = append(*t, str2code(params[k], item[idx+1:]))
 		}
-		*t = append(*t, str2code(params[j+1], io.output))
+		*t = append(*t, str2code(params[pn], io.output))
 		res[i] = t
 	}
 	return newTests(res, fName, params)
 }
 
+func indexParam(input, key string) (string, int) {
+	if key == "output" {
+		return input, len(input)
+	}
+	idx := strings.Index(input, key+" = ")
+	for idx > 0 && input[idx] != ',' {
+		idx--
+	}
+	return input[:idx], idx
+}
+
 func params(code string) (res []*param, fName string) {
+	n := len(code)
 	var f []byte
-	j := 0
+	j := strings.LastIndex(code, "func ")
 	for code[j] != '(' {
 		b := code[j]
 		if j > 3 && b == ' ' && code[j-4:j] == "func" {
@@ -200,37 +270,34 @@ func params(code string) (res []*param, fName string) {
 		j++
 	}
 
-	var key, val []byte
-	for j++; code[j] != ')'; {
-		if code[j] == ' ' || code[j] == ',' {
-			j++
-			continue
+	end := strings.IndexByte(code[j:], ')')
+	items := strings.Split(code[j+1:j+end], ",")
+	// root, p, q *TreeNode
+	valStr := ""
+	res = make([]*param, len(items))
+	for i := len(items) - 1; i >= 0; i-- {
+		kv := strings.Split(strings.Trim(items[i], " "), " ")
+		if len(kv) != 1 {
+			valStr = kv[1]
 		}
-		for code[j] != ' ' {
-			key = append(key, code[j])
-			j++
-		}
-		for code[j] == ' ' {
-			j++
-		}
-		for code[j] != ',' && code[j] != ')' {
-			val = append(val, code[j])
-			j++
-		}
-		res = append(res, &param{string(key), string(val)})
-		key = key[:0]
-		val = val[:0]
+		res[i] = &param{kv[0], valStr}
 	}
 
+	var key, val []byte
+	j += end
 	key = append(key, "output"...)
 	for code[j] == ' ' || code[j] == ')' {
 		j++
 	}
 
-	for code[j] != ' ' {
+	for j < n && code[j] != ' ' && code[j] != '{' {
 		val = append(val, code[j])
 		j++
 	}
+	if len(val) == 0 {
+		panic("output is empty.")
+	}
+
 	res = append(res, &param{string(key), string(val)})
 	return res, string(f)
 }

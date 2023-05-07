@@ -49,6 +49,9 @@ func question(id string) *QuestionData {
 
 	data, _ := io.ReadAll(resp.Body)
 	content, _ := jsonparser.GetString(data, "data", "question", "content")
+	if content == "" {
+		panic("content is empty.")
+	}
 	translatedContent, _ := jsonparser.GetString(data, "data", "question", "translatedContent")
 	questionFrontendId, _ := jsonparser.GetString(data, "data", "question", "questionFrontendId")
 	code := ""
@@ -67,4 +70,8 @@ func url2id(url string) (id string) {
 	fmt.Println("get content url", url)
 	arr := strings.Split(url, "/problems/")
 	return strings.Trim(arr[1], "/")
+}
+
+func Question(url string) *QuestionData {
+	return question(url2id(url))
 }
