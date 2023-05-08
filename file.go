@@ -1,8 +1,12 @@
 package leetcodeTests
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/buger/jsonparser"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -14,8 +18,68 @@ func FileRun(dir string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if url == "" {
+		panic("URL is empty!")
+	}
+	if url == "all" {
+		createAll(dir)
+		return
+	}
 	id := url2id(url)
 	file(dir, id)
+}
+
+const queryAll = `{
+  "query": "\n    query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {\n  problemsetQuestionList(\n    categorySlug: $categorySlug\n    limit: $limit\n    skip: $skip\n    filters: $filters\n  ) {\n    hasMore\n    total\n    questions {\n      acRate\n      difficulty\n      freqBar\n      frontendQuestionId\n      isFavor\n      paidOnly\n      solutionNum\n      status\n      title\n      titleCn\n      titleSlug\n      topicTags {\n        name\n        nameTranslated\n        id\n        slug\n      }\n      extra {\n        hasVideoSolution\n        topCompanyTags {\n          imgUrl\n          slug\n          numSubscribed\n        }\n      }\n    }\n  }\n}\n    ",
+  "variables": {
+    "categorySlug": "algorithms",
+    "skip": %d,
+    "limit": 50,
+    "filters": {}
+  },
+  "operationName": "problemsetQuestionList"
+}`
+
+func createAll(dir string) {
+	page := 1
+	for {
+		data := queryPage(page)
+		hasMore, _ := jsonparser.GetBoolean(data, "data", "problemsetQuestionList", "hasMore")
+		if !hasMore {
+			break
+		}
+		_, _ = jsonparser.ArrayEach(data, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+			id := ""
+			defer func() {
+				if err := recover(); err != nil {
+					fmt.Println("error:", err)
+					fmt.Println("url:", "https://leetcode.cn/problems/"+id+"/")
+				}
+			}()
+			id, _ = jsonparser.GetString(value, "titleSlug")
+			file(dir, id)
+		}, "data", "problemsetQuestionList", "questions")
+		page++
+	}
+}
+
+func queryPage(page int) []byte {
+	url := "https://leetcode.cn/graphql/"
+	client := &http.Client{}
+	body := bytes.NewReader([]byte(fmt.Sprintf(queryAll, (page-1)*50)))
+	req, _ := http.NewRequest("POST", url, body)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		panic("请求失败:" + err.Error())
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+	data, _ := io.ReadAll(resp.Body)
+	return data
 }
 
 func file(dir, id string) {
