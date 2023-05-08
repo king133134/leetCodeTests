@@ -18,8 +18,8 @@ import (
 var currentDir string
 var httpOnce sync.Once
 
-// Index 用于处理/leetcode的GET请求
-func Index(context *gin.Context) {
+// indexHandle 用于处理/index的GET请求
+func indexHandle(context *gin.Context) {
 	defer func() {
 		if err := recover(); err != nil {
 			_, _ = fmt.Fprint(context.Writer, err)
@@ -28,8 +28,8 @@ func Index(context *gin.Context) {
 	context.HTML(http.StatusOK, "index.html", nil)
 }
 
-// Question 用于处理/question的GET请求。它会获取问题的ID，并从问题数据中获取代码、翻译后的内容和测试用例数据
-func Question(c *gin.Context) {
+// questionHandle 用于处理/question的GET请求。它会获取问题的ID，并从问题数据中获取代码、翻译后的内容和测试用例数据
+func questionHandle(c *gin.Context) {
 	id := url2id(c.Query("url"))
 	cache := NewCache()
 	data := cache.Remember("question::"+id, func() interface{} {
@@ -54,8 +54,8 @@ func HttpStart(port int) {
 	httpOnce.Do(httpInit)
 	router := gin.Default()
 	router.LoadHTMLFiles(currentDir+"/templates/index.html", currentDir+"/templates/question.html")
-	router.GET("/index", Index)
-	router.GET("/question", Question)
+	router.GET("/index", indexHandle)
+	router.GET("/question", questionHandle)
 	router.StaticFS("/statics", http.Dir(currentDir+"/statics/"))
 	_ = router.SetTrustedProxies(nil)
 	_ = router.Run(fmt.Sprintf(":%d", port))
