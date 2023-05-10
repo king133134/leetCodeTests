@@ -2,19 +2,8 @@ package main
 
 import (
 	"flag"
-	"leetcodeTests"
+	"github.com/king133134/leetCodeTests"
 )
-
-type TreeNode struct {
-	Val   int
-	Left  *TreeNode
-	Right *TreeNode
-}
-
-type ListNode struct {
-	Val  int
-	Next *ListNode
-}
 
 func main() {
 	var mod = flag.String("mod", "http", "run mod")

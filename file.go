@@ -22,11 +22,10 @@ func FileRun(dir string) {
 		panic("URL is empty!")
 	}
 	if url == "all" {
-		createAll(dir)
+		CreatAll(dir)
 		return
 	}
-	id := url2id(url)
-	file(dir, id)
+	CreatByUrl(dir, url)
 }
 
 const queryAll = `{
@@ -40,7 +39,7 @@ const queryAll = `{
   "operationName": "problemsetQuestionList"
 }`
 
-func createAll(dir string) {
+func CreatAll(dir string) {
 	page := 1
 	for {
 		data := queryPage(page)
@@ -57,7 +56,7 @@ func createAll(dir string) {
 				}
 			}()
 			id, _ = jsonparser.GetString(value, "titleSlug")
-			file(dir, id)
+			CreateById(dir, id)
 		}, "data", "problemsetQuestionList", "questions")
 		page++
 	}
@@ -82,7 +81,11 @@ func queryPage(page int) []byte {
 	return data
 }
 
-func file(dir, id string) {
+func CreatByUrl(dir, url string) {
+	CreateById(dir, url2id(url))
+}
+
+func CreateById(dir, id string) {
 	data := question(id)
 	dir = strings.TrimRight(dir, "/ ") + "/problem_" + data.id
 	_, err := os.Stat(dir)
