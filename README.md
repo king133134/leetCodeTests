@@ -10,9 +10,9 @@
 
 ## 使用方法
 
-1. 把代码clone下来或者直接下载代码的压缩包
+1. 快速安装
    ```shell
-   git clone git@github.com:king133134/leetCodeTests.git
+   go get github.com/king133134/leetcodeTests
    ```
 2. 进入 leetCodeTests 文件夹 
 3. 有两种方式来生成测试用例，只需要提供题目的URL无论是.cn还是.com都支持
@@ -26,7 +26,28 @@
       ```shell
       go run example/main.go -mod=http -port=8080
       ```
-      然后打开网址[http://localhost:8080/index](http://localhost:8080/index)，输入URL即可
+      然后打开网址[http://localhost:8080/index](http://localhost:8080/index)，输入题目URL即可
+4. 可以使用以下自定义方式
+   1. 直接通过给URL和指定生成文件目录
+      ```go
+      package main
+
+      import "github.com/king133134/leetCodeTests"
+   
+      func main() {
+         leetcodeTests.CreatByUrl("./tests", "https: //leetcode.cn/problems/brace-expansion-ii/")
+      }
+      ```
+   2. 通过网页交互的方式，然后打开网址[http://localhost:8080/index](http://localhost:8080/index)，输入题目URL即可
+       ```go
+      package main
+
+      import "github.com/king133134/leetCodeTests"
+   
+      func main() {
+         leetcodeTests.HttpStart(8080)
+      }
+      ```
 
 LICENSE
 ---

@@ -3,8 +3,8 @@ package leetcodeTests
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	. "github.com/king133134/leetCodeTests/cache"
 	"html/template"
-	. "leetcodeTests/cache"
 	"log"
 	"net/http"
 	"os"

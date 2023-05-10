@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/buger/jsonparser"
+	. "github.com/king133134/leetCodeTests/parser"
 	"io"
-	. "leetcodeTests/parser"
 	"net/http"
 	"strings"
 )
