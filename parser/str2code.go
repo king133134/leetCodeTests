@@ -35,7 +35,7 @@ func str2code(p *param, val string) *Code {
 			res.Append(b)
 			i++
 		}
-	case p.val == "[][]int" || p.val == "[]int" || p.val == "[]string" || p.val == "[][]string" || p.val == "[]bool":
+	case p.val == "[][]int" || p.val == "[]int" || p.val == "[]string" || p.val == "[][]string" || p.val == "[]bool" || p.val == "[][]bool" || p.val == "[]float64" || p.val == "[][]float64" || p.val == "[]float32" || p.val == "[][]float32":
 		res.AppendBytes([]byte(p.val))
 		for i < n {
 			b := val[i]
