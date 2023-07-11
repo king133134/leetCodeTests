@@ -1,7 +1,8 @@
 package parser
 
 import (
-	"html"
+	"bytes"
+	"golang.org/x/net/html"
 	"strings"
 )
 
@@ -35,7 +36,7 @@ func str2code(p *param, val string) *Code {
 			res.Append(b)
 			i++
 		}
-	case p.val == "[][]int" || p.val == "[]int" || p.val == "[]string" || p.val == "[][]string" || p.val == "[]bool" || p.val == "[][]bool" || p.val == "[]float64" || p.val == "[][]float64" || p.val == "[]float32" || p.val == "[][]float32":
+	case p.val == "[][]int" || p.val == "[]int" || p.val == "[]int64" || p.val == "[]string" || p.val == "[][]string" || p.val == "[]bool" || p.val == "[][]bool" || p.val == "[]float64" || p.val == "[][]float64" || p.val == "[]float32" || p.val == "[][]float32":
 		res.AppendBytes([]byte(p.val))
 		for i < n {
 			b := val[i]
@@ -48,7 +49,7 @@ func str2code(p *param, val string) *Code {
 			res.Append(b)
 			i++
 		}
-	case p.val == "int" || p.val == "float32" || p.val == "float64" || p.val == "bool" || p.val == "string":
+	case p.val == "int" || p.val == "int64" || p.val == "int32" || p.val == "float32" || p.val == "float64" || p.val == "bool" || p.val == "string":
 		res.AppendBytes([]byte(val[i:]))
 	case p.val == "*TreeNode":
 		res.AppendBytes(toTreeNode(val[i:]))
@@ -312,7 +313,7 @@ func buildIO(con *string, i int) (start int, bytes []byte) {
 	for (*con)[i] == ' ' || (*con)[i] == '\n' {
 		i++
 	}
-	for ; (*con)[i] != '<'; i++ {
+	for ; (*con)[i] != '<' || (*con)[i:i+8] != "<strong>"; i++ {
 		b := (*con)[i]
 		if b == '\n' || b == '\r' {
 			continue
@@ -333,16 +334,34 @@ func getContentIO(con *string) []testIO {
 		if b != ':' {
 
 		} else if (*con)[i-5:i] == "Input" {
-			start, bytes := buildIO(con, i)
+			start, text := buildIO(con, i)
 			i = start
-			cur.input = string(bytes)
+			cur.input = removeHTMLTags(text)
 		} else if (*con)[i-6:i] == "Output" {
-			start, bytes := buildIO(con, i)
+			start, text := buildIO(con, i)
 			i = start
-			cur.output = string(bytes)
+			cur.output = removeHTMLTags(text)
 			res = append(res, cur)
 			cur = testIO{}
 		}
 	}
 	return res
+}
+
+func removeHTMLTags(text []byte) string {
+	doc, _ := html.Parse(bytes.NewReader(text))
+	var result strings.Builder
+
+	var getText func(*html.Node)
+	getText = func(n *html.Node) {
+		if n.Type == html.TextNode {
+			result.WriteString(n.Data)
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			getText(c)
+		}
+	}
+
+	getText(doc)
+	return result.String()
 }
