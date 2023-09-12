@@ -41,6 +41,8 @@ func Run(opts ...Option) {
 		HttpStart(opt.port)
 	case "file":
 		FileRun(opt.dir)
+	case "input":
+		InputRun()
 	default:
 		panic("mod option is error!")
 	}

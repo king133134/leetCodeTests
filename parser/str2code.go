@@ -65,6 +65,12 @@ func str2code(p *param, val string) *Code {
 	return res
 }
 
+// InputToCode eg: input = [10,0,0],paramType = *TreeNode, return = &TreeNode{10, &TreeNode{0,nil,nil}, &TreeNode{0,nil,nil}}
+func InputToCode(paramType, input string) string {
+	res := str2code(&param{val: paramType}, input)
+	return res.String()
+}
+
 // eg:[[1,4,5],[1,3,4],[2,6]]
 func toListNodeSlice(str string) []byte {
 	res := []byte("[]*ListNode{")
@@ -313,7 +319,7 @@ func buildIO(con *string, i int) (start int, bytes []byte) {
 	for (*con)[i] == ' ' || (*con)[i] == '\n' {
 		i++
 	}
-	for ; (*con)[i] != '<' || (*con)[i:i+8] != "<strong>"; i++ {
+	for ; (*con)[i] != '<' || ((*con)[i:i+8] != "<strong>" && (*con)[i:i+8] != "<strong " && (*con)[i:i+6] != "</pre>" && (*con)[i:i+3] != "<p>"); i++ {
 		b := (*con)[i]
 		if b == '\n' || b == '\r' {
 			continue
@@ -363,5 +369,5 @@ func removeHTMLTags(text []byte) string {
 	}
 
 	getText(doc)
-	return result.String()
+	return strings.Trim(result.String(), " ")
 }

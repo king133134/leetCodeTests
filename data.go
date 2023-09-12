@@ -68,8 +68,12 @@ func url2id(url string) (id string) {
 		panic("problem url is empty")
 	}
 	fmt.Println("get content url", url)
-	arr := strings.Split(url, "/problems/")
-	return strings.Trim(arr[1], "/")
+	str := strings.Split(url, "/problems/")[1]
+	var res []byte
+	for i := 0; i < len(str) && str[i] != '/'; i++ {
+		res = append(res, str[i])
+	}
+	return string(res)
 }
 
 func Question(url string) *QuestionData {
