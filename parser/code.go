@@ -2,7 +2,7 @@ package parser
 
 type Code []byte
 
-func (_this *Code) ToString() string {
+func (_this *Code) String() string {
 	return string(*_this)
 }
 
@@ -15,7 +15,7 @@ func (_this *Code) AppendBytes(b []byte) {
 }
 
 func (_this *Code) ToCodeHtml() string {
-	return `<div class="col"><pre><code class="language-go">` + _this.ToString() + `</code></pre></div>`
+	return `<div class="col"><pre><code class="language-go">` + _this.String() + `</code></pre></div>`
 }
 
 func (_this *Code) Value() []byte {

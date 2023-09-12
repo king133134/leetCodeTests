@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	var mod = flag.String("mod", "http", "run mod")
+	var mod = flag.String("mod", "file", "run mod")
 	var port = flag.Int("port", 8080, "http port")
 	var dir = flag.String("dir", ".", "file dir")
 

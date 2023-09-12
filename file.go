@@ -13,7 +13,7 @@ import (
 
 func FileRun(dir string) {
 	var url string
-	fmt.Print("请输入您要生成测试用例的题目的URL：")
+	fmt.Print("请输入您要生成测试用例的题目的URL:")
 	_, err := fmt.Scan(&url)
 	if err != nil {
 		log.Fatal(err)
